@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>音乐人格测试 - 你的耳机里，住着谁？</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #FAFAFA;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .page {
+      display: none;
+      min-height: 100vh;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    /* ========== 首页 ========== */
+    .page-index {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #FFF8F0 0%, #F0F0FF 50%, #F0FAFF 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .bg-decor {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.3;
+    }
+    
+    .orb-1 { width: 200px; height: 200px; background: #FF9500; top: -50px; right: -40px; }
+    .orb-2 { width: 150px; height: 150px; background: #AF52DE; bottom: 100px; left: -30px; }
+    .orb-3 { width: 125px; height: 125px; background: #5AC8FA; bottom: -25px; right: 20px; }
+    
+    .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 30px 40px;
+    }
+    
+    .music-notes {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.8s ease;
+    }
+    
+    .note {
+      font-size: 24px;
+      animation: float 3s ease infinite;
+    }
+    
+    .note:nth-child(1) { color: #FF9500; }
+    .note:nth-child(2) { color: #FF2D55; animation-delay: 0.5s; }
+    .note:nth-child(3) { color: #AF52DE; animation-delay: 1s; }
+    .note:nth-child(4) { color: #5AC8FA; animation-delay: 1.5s; }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .title-area {
+      text-align: center;
+      margin-bottom: 10px;
+      animation: fadeIn 0.8s ease;
+    }
+    
+    .title {
+      display: block;
+      font-size: 36px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #FF6B35, #FF2D55, #AF52DE);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 4px;
+    }
+    
+    .title-en {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: #999;
+      margin-top: 4px;
+    }
+    
+    .subtitle-area {
+      text-align: center;
+      margin-bottom: 8px;
+      animation: slideUp 0.8s ease 0.2s both;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .desc-area {
+      text-align: center;
+      margin-bottom: 20px;
+      animation: slideUp 0.8s ease 0.4s both;
+    }
+    
+    .desc {
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 1px;
+    }
+    
+    .preview-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+      max-width: 300px;
+      animation: slideUp 0.8s ease 0.5s both;
+    }
+    
+    .preview-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 60px;
+      padding: 8px 4px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .preview-emoji {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+    
+    .preview-title {
+      font-size: 9px;
+      color: #666;
+      white-space: nowrap;
+    }
+    
+    .btn-start {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      max-width: 300px;
+      height: 50px;
+      background: linear-gradient(135deg, #FF6B35, #FF2D55);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      border: none;
+      border-radius: 25px;
+      box-shadow: 0 4px 15px rgba(255,45,85,0.3);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: slideUp 0.8s ease 0.7s both;
+    }
+    
+    .btn-start:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(255,45,85,0.4);
+    }
+    
+    .btn-start:active {
+      transform: scale(0.98);
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      animation: fadeIn 0.8s ease 1s both;
+    }
+    
+    .footer-tip {
+      display: block;
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+    
+    .footer-disclaimer {
+      display: block;
+      font-size: 10px;
+      color: #ccc;
+    }
+    
+    /* ========== 测试页 ========== */
+    .page-test {
+      min-height: 100vh;
+      background: #FAFAFA;
+      padding-bottom: 30px;
+    }
+    
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #eee;
+      z-index: 100;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      transition: width 0.4s ease;
+      border-radius: 0 2px 2px 0;
+    }
+    
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px 10px;
+      padding-top: 20px;
+    }
+    
+    .act-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .act-icon { font-size: 16px; }
+    .act-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .q-counter {
+      font-size: 12px;
+      color: #aaa;
+    }
+    
+    .countdown-area {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0 5px;
+    }
+    
+    .countdown-ring {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s;
+    }
+    
+    .countdown-num {
+      font-size: 18px;
+      font-weight: 800;
+      transition: color 0.3s;
+    }
+    
+    .question-area {
+      padding: 20px 25px 15px;
+    }
+    
+    .question-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #222;
+      line-height: 1.6;
+    }
+    
+    .options-area {
+      padding: 0 20px;
+    }
+    
+    .option-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 14px;
+      margin-bottom: 10px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .option-card:hover {
+      transform: scale(1.01);
+    }
+    
+    .option-card.selected {
+      border-color: #FF6B35;
+      background: #FFF5F0;
+      transform: scale(1.02);
+    }
+    
+    .option-card.correct {
+      border-color: #34C759;
+      background: #F0FFF0;
+    }
+    
+    .option-card.wrong {
+      border-color: #FF3B30;
+      background: #FFF5F5;
+    }
+    
+    .option-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    
+    .option-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #F0F0F0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      flex-shrink: 0;
+    }
+    
+    .option-card.selected .option-label {
+      background: #FF6B35;
+      color: #fff;
+    }
+    
+    .option-card.correct .option-label {
+      background: #34C759;
+      color: #fff;
+    }
+    
+    .option-text {
+      font-size: 15px;
+      color: #333;
+      line-height: 1.5;
+    }
+    
+    .option-badge {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    
+    .knowledge-hint {
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 8px;
+      margin: 10px 20px 0;
+    }
+    
+    .hint-correct {
+      background: #F0FFF0;
+      color: #34C759;
+    }
+    
+    .hint-wrong {
+      background: #FFF8F0;
+      color: #FF9500;
+    }
+    
+    .transition-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.96);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    
+    .transition-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .transition-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .tr-icon { font-size: 40px; }
+    .tr-act { font-size: 14px; color: #999; letter-spacing: 2px; }
+    .tr-title { font-size: 22px; font-weight: 800; color: #333; }
+    .tr-desc { font-size: 14px; color: #888; margin-top: 4px; }
+    
+    /* ========== 结果页 ========== */
+    .page-result {
+      min-height: 100vh;
+      background: #FAFAFA;
+      position: relative;
+    }
+    
+    .result-glow {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 300px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .scroll-area {
+      position: relative;
+      z-index: 1;
+      padding-bottom: 30px;
+    }
+    
+    .identity-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 15px;
+      animation: fadeIn 0.8s ease;
+    }
+    
+    .p-emoji { font-size: 50px; margin-bottom: 6px; }
+    .p-title { font-size: 26px; font-weight: 900; margin-bottom: 3px; }
+    .p-code {
+      font-size: 12px;
+      color: #aaa;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+    
+    .tagline-box {
+      background: rgba(0,0,0,0.04);
+      border-radius: 15px;
+      padding: 8px 16px;
+    }
+    
+    .tagline-text {
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+    }
+    
+    .section {
+      padding: 10px 20px;
+      animation: slideUp 0.6s ease both;
+    }
+    
+    .section-title {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .musician-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    
+    .musician-avatar { font-size: 32px; }
+    .musician-info { display: flex; flex-direction: column; gap: 2px; }
+    .musician-label {
+      font-size: 9px;
+      color: #bbb;
+      letter-spacing: 2px;
+    }
+    .musician-name { font-size: 17px; font-weight: 800; }
+    .musician-quote {
+      font-size: 12px;
+      color: #888;
+      font-style: italic;
+    }
+    
+    .radar-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    
+    .radar-canvas {
+      width: 250px;
+      height: 250px;
+    }
+    
+    .axis-grid { padding: 0 10px; }
+    
+    .axis-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .axis-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .axis-pct { font-size: 14px; font-weight: 800; }
+    .axis-label { font-size: 12px; color: #888; }
+    
+    .analysis-card, .roast-card, .soul-card, .knowledge-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    
+    .dim-list { margin-bottom: 10px; }
+    .dim-item { margin-bottom: 9px; }
+    .dim-item:last-child { margin-bottom: 0; }
+    
+    .dim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+    
+    .dim-label { font-size: 12px; font-weight: 600; color: #555; }
+    .dim-pct { font-size: 12px; font-weight: 800; }
+    
+    .dim-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: #F0F0F0;
+      overflow: hidden;
+    }
+    
+    .dim-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+    
+    .dim-desc {
+      display: block;
+      font-size: 11px;
+      color: #999;
+      line-height: 1.5;
+      margin-top: 3px;
+    }
+    
+    .analysis-summary {
+      background: #F8F9FA;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 12px;
+      color: #555;
+      line-height: 1.7;
+    }
+    
+    .analysis-refs {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #F0F0F0;
+    }
+    
+    .ref-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      margin-bottom: 3px;
+    }
+    
+    .ref-item {
+      display: block;
+      font-size: 9px;
+      color: #bbb;
+      line-height: 1.5;
+    }
+    
+    .roast-text {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.9;
+    }
+    
+    .soul-card {
+      background: linear-gradient(135deg, #FFF8F0, #F0F0FF);
+    }
+    
+    .soul-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.7;
+      font-style: italic;
+    }
+    
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .tag {
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    
+    .artist-tag {
+      background: #F5F5F5;
+      color: #555;
+      font-weight: 600;
+    }
+    
+    .keyword-tag {
+      font-weight: 500;
+    }
+    
+    .knowledge-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .kl-emoji { font-size: 20px; }
+    .kl-level {
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+    }
+    .kl-desc {
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .album-ad-card {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      gap: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    .album-ad-img {
+      width: 140px;
+      height: 140px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      object-fit: cover;
+      background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+    }
+    
+    .album-ad-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+    }
+    
+    .album-ad-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    
+    .album-ad-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.5px;
+    }
+    
+    .album-ad-qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 8px 0 6px;
+      gap: 3px;
+    }
+    
+    .album-ad-qr {
+      width: 90px;
+      height: 90px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      object-fit: contain;
+      background: #fff;
+    }
+    
+    .album-ad-qr-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+    }
+    
+    .album-ad-cta {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #FF9500;
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    .disclaimer {
+      text-align: center;
+      padding: 15px 30px 5px;
+    }
+    
+    .disclaimer text {
+      font-size: 10px;
+      color: #ccc;
+    }
+    
+    .action-area {
+      display: flex;
+      gap: 10px;
+      padding: 15px 20px;
+    }
+    
+    .btn-retake, .btn-share {
+      flex: 1;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-retake {
+      background: #fff;
+      color: #666;
+      border: 1px solid #E0E0E0;
+    }
+    
+    .btn-share {
+      background: linear-gradient(135deg, #FF6B35, #FF2D55);
+      color: #fff;
+      border: none;
+    }
+    
+    .btn-retake:hover, .btn-share:hover {
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+<body>
+  <!-- 首页 -->
+  <div id="page-index" class="page page-index active">
+    <div class="bg-decor">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="content">
+      <div class="music-notes">
+        <span class="note">♪</span>
+        <span class="note">♫</span>
+        <span class="note">♩</span>
+        <span class="note">♬</span>
+      </div>
+      <div class="title-area">
+        <span class="title">音乐人格</span>
+        <span class="title-en">MUSIC PERSONALITY</span>
+      </div>
+      <div class="subtitle-area">
+        <span class="subtitle">你的耳机里，住着谁？</span>
+      </div>
+      <div class="desc-area">
+        <span class="desc">30道题 · 5幕音乐旅程 · 16种毒舌人格</span>
+      </div>
+      <div class="preview-grid" id="preview-grid"></div>
+      <button class="btn-start" onclick="startTest()">
+        <span>🎧</span>
+        <span>开始测试</span>
+      </button>
+      <div class="footer">
+        <span class="footer-tip">🎵 约3分钟 · 测完你会更了解自己</span>
+        <span class="footer-disclaimer">仅供娱乐参考</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 测试页 -->
+  <div id="page-test" class="page page-test">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="top-bar">
+      <div class="act-info">
+        <span class="act-icon" id="act-icon">⚡</span>
+        <span class="act-title" id="act-title">第1幕 · 直觉</span>
+      </div>
+      <span class="q-counter" id="q-counter">1 / 30</span>
+    </div>
+    <div class="countdown-area" id="countdown-area" style="display:none;">
+      <div class="countdown-ring" id="countdown-ring">
+        <span class="countdown-num" id="countdown-num">8</span>
+      </div>
+    </div>
+    <div class="question-area">
+      <span class="question-text" id="question-text">加载中...</span>
+    </div>
+    <div class="options-area" id="options-area"></div>
+    <div class="knowledge-hint" id="knowledge-hint" style="display:none;"></div>
+    
+    <div class="transition-overlay" id="transition-overlay">
+      <div class="transition-content">
+        <span class="tr-icon" id="tr-icon">⚡</span>
+        <span class="tr-act" id="tr-act">第1幕</span>
+        <span class="tr-title" id="tr-title">直觉</span>
+        <span class="tr-desc" id="tr-desc">直觉直觉，秒选不后悔</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 结果页 -->
+  <div id="page-result" class="page page-result">
+    <div class="result-glow" id="result-glow"></div>
+    <div class="scroll-area">
+      <div class="identity-section">
+        <span class="p-emoji" id="p-emoji">🎤</span>
+        <span class="p-title" id="p-title">KTV霸主</span>
+        <span class="p-code" id="p-code">ESTJ</span>
+        <div class="tagline-box">
+          <span class="tagline-text" id="tagline-text">你唱歌从不等人邀请</span>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.1s">
+        <span class="section-title">🎵 你的音乐灵魂</span>
+        <div class="musician-card" id="musician-card">
+          <span class="musician-avatar" id="musician-avatar">🎹</span>
+          <div class="musician-info">
+            <span class="musician-label">SOUL MUSICIAN</span>
+            <span class="musician-name" id="musician-name">林俊杰</span>
+            <span class="musician-quote" id="musician-quote">每一首歌都要唱到所有人都会跟唱</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.2s">
+        <span class="section-title">🎯 品味光谱</span>
+        <div class="radar-wrap">
+          <canvas id="radar-canvas" class="radar-canvas"></canvas>
+        </div>
+        <div class="axis-grid">
+          <div class="axis-row">
+            <div class="axis-item">
+              <span class="axis-pct" id="pct-ei" style="color:#FF9500">70%</span>
+              <span class="axis-label" id="label-ei">外放 E</span>
+            </div>
+            <div class="axis-item">
+              <span class="axis-pct" id="pct-sn" style="color:#FF2D55">65%</span>
+              <span class="axis-label" id="label-sn">旋律 S</span>
+            </div>
+          </div>
+          <div class="axis-row">
+            <div class="axis-item">
+              <span class="axis-pct" id="pct-tf" style="color:#5856D6">60%</span>
+              <span class="axis-label" id="label-tf">结构 T</span>
+            </div>
+            <div class="axis-item">
+              <span class="axis-pct" id="pct-jp" style="color:#30B0C7">68%</span>
+              <span class="axis-label" id="label-jp">经典 J</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.3s">
+        <span class="section-title">🧠 品味心理学</span>
+        <div class="analysis-card" id="analysis-card">
+          <div class="dim-list" id="dim-list"></div>
+          <div class="analysis-summary" id="analysis-summary"></div>
+          <div class="analysis-refs" id="analysis-refs"></div>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.4s">
+        <span class="section-title">🔥 毒舌点评</span>
+        <div class="roast-card">
+          <span class="roast-text" id="roast-text"></span>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.5s">
+        <span class="section-title">🎬 灵魂场景</span>
+        <div class="soul-card">
+          <span class="soul-text" id="soul-text"></span>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.6s">
+        <span class="section-title">🎵 代表音乐人</span>
+        <div class="tag-list" id="artist-list"></div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.7s">
+        <span class="section-title">🏷️ 品味关键词</span>
+        <div class="tag-list" id="keyword-list"></div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.8s">
+        <span class="section-title">📚 知识段位</span>
+        <div class="knowledge-card" id="knowledge-card">
+          <span class="kl-emoji" id="kl-emoji">🎯</span>
+          <span class="kl-level" id="kl-level">内行人</span>
+          <span class="kl-desc" id="kl-desc">你的音乐知识储备不错</span>
+        </div>
+      </div>
+      
+      <div class="section" style="animation-delay:0.75s">
+        <span class="section-title">💿 创作者专辑</span>
+        <div class="album-ad-card">
+          <div class="album-ad-img" style="background: linear-gradient(135deg, #2a2a4a, #1a1a3a); display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 40px; opacity: 0.5;">💿</span>
+          </div>
+          <div class="album-ad-info">
+            <span class="album-ad-name">白天不亮</span>
+            <span class="album-ad-sub">电子 / 国风 / 氛围 / 器乐</span>
+            <div class="album-ad-qr-wrap">
+              <div class="album-ad-qr" style="background: #fff; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 12px; color: #ccc;">扫码收听</span>
+              </div>
+              <span class="album-ad-qr-label">扫码收听</span>
+            </div>
+            <span class="album-ad-cta">🎧 各平台搜「自然律」收听完整专辑</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="disclaimer">
+        <text>本测试仅供娱乐参考，不构成任何心理诊断或评估</text>
+      </div>
+      
+      <div class="action-area">
+        <button class="btn-retake" onclick="restartTest()">🔄 重新测试</button>
+        <button class="btn-share" onclick="shareResult()">📤 分享结果</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // ========== 题库数据 ==========
+    const allQuestions = [
+      {id:1,act:1,type:"intuition",timeLimit:8,question:"朋友说"放首歌听听"，你的第一反应是——",options:[{text:"放最近最火的那首",score:{ei:2,sn:1}},{text:"放一首只有你知道的宝藏歌",score:{ei:-2,sn:-1}}]},
+      {id:2,act:1,type:"intuition",timeLimit:8,question:"你更享受哪种时刻？",options:[{text:"音乐节万人大合唱",score:{ei:2,tf:-1}},{text:"深夜独自戴耳机听",score:{ei:-2,tf:-1}}]},
+      {id:3,act:1,type:"intuition",timeLimit:8,question:"一首歌打动你，通常是因为——",options:[{text:"旋律太洗脑了，停不下来",score:{sn:2,jp:1}},{text:"那个氛围太对了，说不清但被击中",score:{sn:-2,tf:-1,jp:-1}}]},
+      {id:4,act:1,type:"intuition",timeLimit:8,question:"你听歌时更在意什么？",options:[{text:"歌词在说什么",score:{sn:1,tf:1}},{text:"音乐让我感受到什么",score:{sn:-1,tf:-1}}]},
+      {id:5,act:1,type:"intuition",timeLimit:8,question:"你更想看——",options:[{text:"顶级乐手的现场solo",score:{ei:1,tf:2}},{text:"一支氛围感拉满的音乐短片",score:{ei:-1,tf:-2}}]},
+      {id:6,act:1,type:"intuition",timeLimit:8,question:"如果音乐是一种天气——",options:[{text:"晴天，阳光灿烂",score:{ei:1,sn:1,jp:1}},{text:"雾天，看不清但很美",score:{ei:-1,sn:-1,jp:-1}}]},
+      {id:7,act:1,type:"intuition",timeLimit:8,question:"你打开音乐App的第一步——",options:[{text:"看排行榜和推荐",score:{ei:1,sn:1,jp:1}},{text:"搜一首突然想起来的歌",score:{ei:-1,sn:-1,jp:-1}}]},
+      {id:8,act:1,type:"intuition",timeLimit:8,question:"你更向往的演出场景——",options:[{text:"舞台中央，聚光灯打在身上",score:{ei:3,tf:1}},{text:"角落里，没人注意但音乐包围你",score:{ei:-3,tf:-1}}]},
+      {id:9,act:1,type:"intuition",timeLimit:8,question:"你觉得好的副歌应该——",options:[{text:"一听就能跟着唱",score:{sn:2,jp:1}},{text:"每次听都能发现新细节",score:{sn:-2,jp:-1}}]},
+      {id:10,act:1,type:"intuition",timeLimit:8,question:"音乐对你来说更像是——",options:[{text:"社交货币，分享就是快乐",score:{ei:2,tf:1}},{text:"私人领地，独享才最纯粹",score:{ei:-2,tf:-1}}]},
+      {id:11,act:1,type:"intuition",timeLimit:8,question:"你更想成为——",options:[{text:"演唱会的主角",score:{ei:3}},{text:"录音室的制作人",score:{ei:-2,tf:2}}]},
+      {id:12,act:1,type:"intuition",timeLimit:8,question:"你听到一首新歌，第一反应——",options:[{text:"分享给朋友！",score:{ei:2,tf:1}},{text:"先自己多听几遍",score:{ei:-2,tf:-1}}]},
+      {id:101,act:1,type:"intuition",timeLimit:8,question:"你去演唱会的核心动力是——",options:[{text:"和几千人一起嗨",score:{ei:2}},{text:"近距离感受音乐人的表达",score:{ei:-1,tf:1}}]},
+      {id:102,act:1,type:"intuition",timeLimit:8,question:"你听歌会不自觉地——",options:[{text:"跟着打拍子或哼唱",score:{ei:1,sn:1}},{text:"闭上眼沉浸进去",score:{ei:-1,tf:-1}}]},
+      {id:103,act:1,type:"intuition",timeLimit:8,question:"你的歌单是——",options:[{text:"公开的，谁来都能看",score:{ei:2}},{text:"私密的，只有我自己知道",score:{ei:-2}}]},
+      {id:104,act:1,type:"intuition",timeLimit:8,question:"音乐响起来，你身体先动的是——",options:[{text:"脚，不由自主踩拍子",score:{ei:1,sn:1}},{text:"心，被什么东西击中了",score:{ei:-1,tf:-1}}]},
+      {id:105,act:1,type:"intuition",timeLimit:8,question:"你觉得一首歌最爽的时刻——",options:[{text:"高潮段落所有人一起唱",score:{ei:2,sn:1}},{text:"一段只有自己注意到的细节",score:{ei:-2,sn:-1}}]},
+      {id:106,act:1,type:"intuition",timeLimit:8,question:"朋友翻你歌单，你——",options:[{text:"无所谓，随便看",score:{ei:1}},{text:"有点紧张，怕被评判",score:{ei:-1,jp:-1}}]},
+      {id:107,act:1,type:"intuition",timeLimit:8,question:"你更想和谁一起听歌？",options:[{text:"一群朋友，热热闹闹",score:{ei:2}},{text:"一个人，或者一个懂我的人",score:{ei:-2,tf:-1}}]},
+      {id:108,act:1,type:"intuition",timeLimit:8,question:"你判断一首歌好不好听——",options:[{text:"10秒就够了",score:{sn:1,jp:1}},{text:"至少听完一遍再下结论",score:{sn:-1,jp:-1}}]},
+      {id:109,act:1,type:"intuition",timeLimit:8,question:"你听歌时的表情——",options:[{text:"忍不住跟着笑或动",score:{ei:2,sn:1}},{text:"面无表情，但内心翻江倒海",score:{ei:-2,tf:-1}}]},
+      {id:110,act:1,type:"intuition",timeLimit:8,question:"你更喜欢——",options:[{text:"歌词直白有力",score:{sn:1,jp:1}},{text:"歌词留白有余味",score:{sn:-1,jp:-1}}]},
+      {id:111,act:1,type:"intuition",timeLimit:8,question:"音乐播放时你会——",options:[{text:"把音量开大，让整个房间都是",score:{ei:2}},{text:"戴上耳机，把世界隔绝在外面",score:{ei:-2}}]},
+      {id:112,act:1,type:"intuition",timeLimit:8,question:"你觉得听歌最好的时机——",options:[{text:"和朋友开车时",score:{ei:2}},{text:"一个人散步时",score:{ei:-2,tf:-1}}]},
+      {id:13,act:2,type:"knowledge",timeLimit:0,question:"《波西米亚狂想曲》是哪支乐队的？",options:[{text:"Queen",score:{tf:1},correct:true},{text:"The Beatles",score:{}},{text:"Led Zeppelin",score:{}},{text:"Pink Floyd",score:{}}]},
+      {id:14,act:2,type:"knowledge",timeLimit:0,question:""魔岩三杰"不包括以下哪位？",options:[{text:"窦唯",score:{}},{text:"张楚",score:{}},{text:"何勇",score:{}},{text:"崔健",score:{tf:1},correct:true}]},
+      {id:15,act:2,type:"knowledge",timeLimit:0,question:"哪种音乐流派起源于牙买加？",options:[{text:"Jazz",score:{}},{text:"Reggae",score:{tf:1},correct:true},{text:"Blues",score:{}},{text:"Funk",score:{}}]},
+      {id:16,act:2,type:"knowledge",timeLimit:0,question:"Beyoncé 主要属于哪种音乐风格？",options:[{text:"Country",score:{}},{text:"R&B / Pop",score:{tf:1},correct:true},{text:"Rock",score:{}},{text:"Classical",score:{}}]},
+      {id:17,act:2,type:"knowledge",timeLimit:0,question:"以下哪个不是电子音乐的子流派？",options:[{text:"House",score:{}},{text:"Techno",score:{}},{text:"Bossa Nova",score:{tf:1},correct:true},{text:"Dubstep",score:{}}]},
+      {id:18,act:2,type:"knowledge",timeLimit:0,question:"《黄河大合唱》的作曲者是？",options:[{text:"聂耳",score:{}},{text:"冼星海",score:{tf:1},correct:true},{text:"贺绿汀",score:{}},{text:"马思聪",score:{}}]},
+      {id:19,act:2,type:"knowledge",timeLimit:0,question:""四大天王"中谁以舞曲见长？",options:[{text:"张学友",score:{}},{text:"刘德华",score:{}},{text:"郭富城",score:{tf:1},correct:true},{text:"黎明",score:{}}]},
+      {id:20,act:2,type:"knowledge",timeLimit:0,question:"吉他效果器"Wah-wah"模仿的是什么声音？",options:[{text:"风声",score:{}},{text:"人声"哇"",score:{tf:1},correct:true},{text:"水流",score:{}},{text:"心跳",score:{}}]},
+      {id:21,act:2,type:"knowledge",timeLimit:0,question:"以下哪位是爵士乐的标志性人物？",options:[{text:"Elvis Presley",score:{}},{text:"Miles Davis",score:{tf:1},correct:true},{text:"Bob Dylan",score:{}},{text:"Freddie Mercury",score:{}}]},
+      {id:22,act:2,type:"knowledge",timeLimit:0,question:""Autotune"最初是用来做什么的？",options:[{text:"修音准",score:{}},{text:"石油勘探声波分析",score:{tf:1},correct:true},{text:"游戏音效",score:{}},{text:"电话降噪",score:{}}]},
+      {id:23,act:2,type:"knowledge",timeLimit:0,question:"莫扎特是哪个时期的作曲家？",options:[{text:"巴洛克",score:{}},{text:"古典主义",score:{tf:1},correct:true},{text:"浪漫主义",score:{}},{text:"现代主义",score:{}}]},
+      {id:24,act:2,type:"knowledge",timeLimit:0,question:""12英寸黑胶"的标准转速是？",options:[{text:"33⅓ RPM",score:{tf:1},correct:true},{text:"45 RPM",score:{}},{text:"78 RPM",score:{}},{text:"50 RPM",score:{}}]},
+      {id:113,act:2,type:"knowledge",timeLimit:0,question:""赋格"是哪种音乐形式的标志性技法？",options:[{text:"奏鸣曲",score:{}},{text:"复调音乐",score:{tf:1},correct:true},{text:"交响诗",score:{}},{text:"协奏曲",score:{}}]},
+      {id:114,act:2,type:"knowledge",timeLimit:0,question:""南方摇滚"代表乐队Lynyrd Skynyrd来自哪个国家？",options:[{text:"英国",score:{}},{text:"美国",score:{tf:1},correct:true},{text:"澳大利亚",score:{}},{text:"加拿大",score:{}}]},
+      {id:115,act:2,type:"knowledge",timeLimit:0,question:"以下哪个是非洲音乐的核心特征？",options:[{text:"复节奏 Polyrhythm",score:{tf:1},correct:true},{text:"和声对位",score:{}},{text:"十二音技法",score:{}},{text:"固定低音",score:{}}]},
+      {id:116,act:2,type:"knowledge",timeLimit:0,question:""迷幻摇滚"兴起于哪个年代？",options:[{text:"1950s",score:{}},{text:"1960s",score:{tf:1},correct:true},{text:"1970s",score:{}},{text:"1980s",score:{}}]},
+      {id:117,act:2,type:"knowledge",timeLimit:0,question:""百大吉他手"常居榜首的Jimi Hendrix主要演奏什么风格？",options:[{text:"布鲁斯摇滚",score:{tf:1},correct:true},{text:"爵士",score:{}},{text:"金属",score:{}},{text:"朋克",score:{}}]},
+      {id:118,act:2,type:"knowledge",timeLimit:0,question:""采样"(Sampling)技术最早广泛用于哪种流派？",options:[{text:"摇滚",score:{}},{text:"古典",score:{}},{text:"嘻哈",score:{tf:1},correct:true},{text:"乡村",score:{}}]},
+      {id:119,act:2,type:"knowledge",timeLimit:0,question:"以下哪首是贝多芬的作品？",options:[{text:"《四季》",score:{}},{text:"《月光奏鸣曲》",score:{tf:1},correct:true},{text:"《天鹅湖》",score:{}},{text:"《春之祭》",score:{}}]},
+      {id:120,act:2,type:"knowledge",timeLimit:0,question:""蓝调音阶"的特征音程是？",options:[{text:"纯五度",score:{}},{text:"减五度/蓝调音",score:{tf:1},correct:true},{text:"大七度",score:{}},{text:"增四度",score:{}}]},
+      {id:121,act:2,type:"knowledge",timeLimit:0,question:""合成器"(Synthesizer)在流行音乐中的大规模使用始于？",options:[{text:"1960s",score:{}},{text:"1970s",score:{tf:1},correct:true},{text:"1990s",score:{}},{text:"2000s",score:{}}]},
+      {id:122,act:2,type:"knowledge",timeLimit:0,question:""歌剧"起源于哪个国家？",options:[{text:"法国",score:{}},{text:"意大利",score:{tf:1},correct:true},{text:"德国",score:{}},{text:"英国",score:{}}]},
+      {id:123,act:2,type:"knowledge",timeLimit:0,question:"以下哪支乐队被认为是"后朋克"的代表？",options:[{text:"Nirvana",score:{}},{text:"Joy Division",score:{tf:1},correct:true},{text:"Oasis",score:{}},{text:"Green Day",score:{}}]},
+      {id:124,act:2,type:"knowledge",timeLimit:0,question:""华语流行"中"中国风"曲风的标志性制作人是？",options:[{text:"李宗盛",score:{}},{text:"周杰伦",score:{tf:1},correct:true},{text:"罗大佑",score:{}},{text:"黄霑",score:{}}]},
+      {id:25,act:3,type:"preference",timeLimit:0,question:"周杰伦 vs 王菲，你更爱谁？",options:[{text:"周杰伦——他就是华语乐坛",score:{ei:1,sn:2}},{text:"王菲——她唱的不是歌是空气",score:{ei:-1,sn:-2}}]},
+      {id:26,act:3,type:"preference",timeLimit:0,question:"以下哪种现场你更想去？",options:[{text:"超大型户外音乐节，几万人一起",score:{ei:2,jp:-1}},{text:"小型Live House，几十个人",score:{ei:-2,jp:-1}}]},
+      {id:27,act:3,type:"preference",timeLimit:0,question:"你对"口水歌"的态度？",options:[{text:"好听就行，管它口水不口水",score:{sn:2,tf:-1,jp:1}},{text:"嗤之以鼻，太没诚意了",score:{sn:-2,tf:1,jp:-1}}]},
+      {id:28,act:3,type:"preference",timeLimit:0,question:"你更愿意被人看到在听——",options:[{text:"一首热门单曲，大家都会跟唱",score:{ei:2,sn:1}},{text:"一首冷门但深刻的曲子，懂的人自然懂",score:{ei:-2,sn:-1}}]},
+      {id:29,act:3,type:"preference",timeLimit:0,question:"你对纯音乐/器乐曲的态度？",options:[{text:"没歌词听着没感觉",score:{sn:2,tf:-1}},{text:"没歌词反而更有想象空间",score:{sn:-2,tf:1}}]},
+      {id:30,act:3,type:"preference",timeLimit:0,question:"你更喜欢哪种人声？",options:[{text:"高亢有力，穿透灵魂",score:{ei:1,tf:-1}},{text:"低沉呢喃，像在耳边说",score:{ei:-1,tf:-1}}]},
+      {id:31,act:3,type:"preference",timeLimit:0,question:"你对翻唱的态度？",options:[{text:"原版才是经典",score:{jp:2}},{text:"翻唱可以赋予新生命",score:{jp:-2}}]},
+      {id:32,act:3,type:"preference",timeLimit:0,question:"你手机里最多的是——",options:[{text:"华语流行",score:{sn:2,tf:-1,jp:1}},{text:"欧美独立/另类",score:{sn:-1,jp:-1}},{text:"电子/实验",score:{sn:-2,tf:2,jp:-1}},{text:"古典/爵士",score:{ei:-1,sn:-1,tf:2,jp:1}}]},
+      {id:33,act:3,type:"preference",timeLimit:0,question:"你更喜欢哪种节奏？",options:[{text:"四四拍，稳定到能跟着点头",score:{sn:1,jp:2}},{text:"不规则节拍，意想不到才有意思",score:{sn:-1,jp:-2}}]},
+      {id:34,act:3,type:"preference",timeLimit:0,question:"你觉得一首歌多长最合适？",options:[{text:"3-4分钟，标准流行曲长度",score:{sn:1,jp:1}},{text:"多久都行，只要它值得",score:{sn:-1,jp:-1}}]},
+      {id:35,act:3,type:"preference",timeLimit:0,question:"你对"古风"音乐的态度？",options:[{text:"好听，中国风就是美",score:{sn:1,jp:1}},{text:"大部分是披着古风皮的流行歌",score:{sn:-1,tf:1,jp:-1}}]},
+      {id:36,act:3,type:"preference",timeLimit:0,question:"你选歌听还是听算法推？",options:[{text:"自己选，我的歌单我做主",score:{jp:2,tf:1}},{text:"算法推，总能发现惊喜",score:{jp:-2,sn:-1}}]},
+      {id:37,act:3,type:"preference",timeLimit:0,question:"你对"音乐品味鄙视链"的态度？",options:[{text:"确实存在，这是客观事实",score:{tf:2,jp:1}},{text:"纯属自嗨，听个歌还分三六九等？",score:{tf:-2,jp:-1}}]},
+      {id:38,act:3,type:"preference",timeLimit:0,question:"你觉得歌词重要吗？",options:[{text:"重要，词写不好曲再好也白搭",score:{sn:1,tf:1}},{text:"不重要，旋律才是灵魂",score:{sn:-1,tf:-1}},{text:"看情况，有的歌需要词有的不需要",score:{tf:1}}]},
+      {id:39,act:3,type:"preference",timeLimit:0,question:"你更喜欢哪种编曲风格？",options:[{text:"简洁利落，每个音符都有存在的理由",score:{tf:2,jp:1}},{text:"层次丰富，越听越有新发现",score:{tf:-1,jp:-1}}]},
+      {id:40,act:3,type:"preference",timeLimit:0,question:"你对"神曲"（广场舞/短视频爆款）的态度？",options:[{text:"能火说明有它的道理",score:{sn:2,jp:1}},{text:"火的歌不一定是好歌",score:{sn:-2,jp:-1}}]},
+      {id:125,act:3,type:"preference",timeLimit:0,question:"你更喜欢在什么场景听歌？",options:[{text:"开车/通勤路上",score:{ei:1,sn:1}},{text:"睡前/安静独处时",score:{ei:-1,tf:-1}}]},
+      {id:126,act:3,type:"preference",timeLimit:0,question:"你觉得"好听"的标准是什么？",options:[{text:"旋律抓耳，一遍就记住",score:{sn:2,jp:1}},{text:"有深度，反复听才品出味道",score:{sn:-2,jp:-1}}]},
+      {id:127,act:3,type:"preference",timeLimit:0,question:"你对音乐平台的"每日推荐"——",options:[{text:"很依赖，经常能发现好歌",score:{jp:-2,sn:-1}},{text:"很少看，我自己知道想听什么",score:{jp:2,tf:1}}]},
+      {id:128,act:3,type:"preference",timeLimit:0,question:"你会因为一首歌的封面/视觉去点开它吗？",options:[{text:"会，视觉也是体验的一部分",score:{ei:-1,tf:-2,jp:-1}},{text:"不会，我只在乎声音",score:{tf:2,jp:1}}]},
+      {id:129,act:3,type:"preference",timeLimit:0,question:"你更认同哪句话？",options:[{text:"流行的不一定是好的，但好的一定会流行",score:{sn:1,jp:2}},{text:"好的音乐往往不流行，流行的音乐往往不够好",score:{sn:-1,jp:-1}}]},
+      {id:130,act:3,type:"preference",timeLimit:0,question:"你对"音乐综艺"的态度？",options:[{text:"好看又好听，为什么不爱？",score:{ei:1,sn:1,jp:1}},{text:"过度包装，失去音乐本质",score:{ei:-1,tf:1,jp:-1}}]},
+      {id:131,act:3,type:"preference",timeLimit:0,question:"你觉得同一首歌，现场版和录音室版——",options:[{text:"现场版更有灵魂",score:{ei:1,tf:-2}},{text:"录音室版更完美",score:{tf:2}}]},
+      {id:132,act:3,type:"preference",timeLimit:0,question:"你会重复听一首歌吗？",options:[{text:"会，好听就单曲循环",score:{sn:1,jp:1}},{text:"很少，总想找新的",score:{jp:-2}}]},
+      {id:133,act:3,type:"preference",timeLimit:0,question:"你更看重一首歌的——",options:[{text:"hook（记忆点）",score:{sn:2,jp:1}},{text:"结构完整性",score:{tf:2,jp:1}},{text:"情绪递进",score:{tf:-2}}]},
+      {id:134,act:3,type:"preference",timeLimit:0,question:"你对"融合曲风"（如爵士+电子）的态度？",options:[{text:"很有意思，碰撞才有火花",score:{jp:-2,tf:1}},{text:"容易两头不讨好，不如做纯的",score:{jp:2,sn:1}}]},
+      {id:135,act:3,type:"preference",timeLimit:0,question:"你觉得音乐有"高级"和"低级"之分吗？",options:[{text:"有，审美判断不是歧视",score:{tf:2,jp:1}},{text:"没有，只有"我喜欢"和"我不喜欢"",score:{tf:-2,jp:-1}}]},
+      {id:136,act:3,type:"preference",timeLimit:0,question:"你更愿意花钱在——",options:[{text:"演唱会/音乐节门票",score:{ei:2}},{text:"高品质耳机/音响设备",score:{ei:-2,tf:2}}]},
+      {id:137,act:3,type:"preference",timeLimit:0,question:"你觉得一首歌值不值得听，关键看——",options:[{text:"能不能打动我",score:{tf:-2}},{text:"有没有技术含量",score:{tf:2}}]},
+      {id:138,act:3,type:"preference",timeLimit:0,question:"你更受不了——",options:[{text:"一首歌被过度播放毁了",score:{jp:-1,sn:1}},{text:"一首好歌没几个人知道",score:{ei:-1,sn:-1}}]},
+      {id:139,act:3,type:"preference",timeLimit:0,question:"你对"AI作曲"的态度？",options:[{text:"有趣，新工具产生新可能",score:{jp:-2,tf:1}},{text:"音乐需要人的灵魂",score:{jp:2,tf:-1}}]},
+      {id:140,act:3,type:"preference",timeLimit:0,question:"你更倾向于——",options:[{text:"按心情选歌听",score:{tf:-2}},{text:"按流派/风格选歌听",score:{tf:1,jp:1}}]},
+      {id:41,act:4,type:"spectrum",timeLimit:0,question:"从极简到极繁，你站在哪？",options:[{text:"越少越好，一个音符能说清的不用两个",score:{ei:-1,sn:-2,tf:2,jp:1}},{text:"越满越好，给我所有声部一起上",score:{ei:1,sn:2,tf:-2,jp:-1}}]},
+      {id:42,act:4,type:"spectrum",timeLimit:0,question:"你认同哪种说法？",options:[{text:"音乐必须有表达、有态度",score:{tf:-2,jp:1}},{text:"音乐可以只是声音，不需要意义",score:{tf:2,jp:-1}}]},
+      {id:43,act:4,type:"spectrum",timeLimit:0,question:"你更认同——",options:[{text:"好的音乐经得起时间考验",score:{jp:2}},{text:"每个时代都有自己的声音",score:{jp:-2}}]},
+      {id:44,act:4,type:"spectrum",timeLimit:0,question:"你对"音乐品味"的看法？",options:[{text:"品味有高低之分，这没什么不好承认的",score:{tf:2,jp:1}},{text:"品味无贵贱，只有不同",score:{tf:-2,jp:-1}}]},
+      {id:45,act:4,type:"spectrum",timeLimit:0,question:"如果你的音乐人生是一部电影——",options:[{text:"奥斯卡级别的史诗大片",score:{ei:1,sn:1,jp:1}},{text:"戛纳获奖的文艺小品",score:{ei:-1,sn:-1,jp:-1}}]},
+      {id:46,act:4,type:"spectrum",timeLimit:0,question:"你觉得音乐最重要的是？",options:[{text:"让人想动起来",score:{ei:2,sn:1,tf:-1}},{text:"让人想静下来",score:{ei:-2,sn:-1,tf:1}},{text:"让人想明白什么",score:{tf:2}},{text:"让人感受到什么",score:{tf:-2}}]},
+      {id:47,act:4,type:"spectrum",timeLimit:0,question:"你对"实验音乐"的态度？",options:[{text:"有意思，推动边界的才是艺术",score:{jp:-2,sn:-1}},{text:"大部分是故弄玄虚",score:{jp:2,sn:1}}]},
+      {id:48,act:4,type:"spectrum",timeLimit:0,question:"你更看重音乐人的——",options:[{text:"技术功底和音乐素养",score:{tf:2,jp:1}},{text:"情感表达和个人魅力",score:{tf:-2,jp:-1}}]},
+      {id:49,act:4,type:"spectrum",timeLimit:0,question:"你听歌时，更享受——",options:[{text:"预期的满足：副歌来了！",score:{sn:1,jp:2}},{text:"意外的惊喜：这里居然这样处理！",score:{sn:-1,jp:-2}}]},
+      {id:50,act:4,type:"spectrum",timeLimit:0,question:"你更想成为——",options:[{text:"一个流派的精通者，深挖到极致",score:{jp:2,tf:1}},{text:"多个流派的游历者，广度就是深度",score:{jp:-2,tf:-1}}]},
+      {id:141,act:4,type:"spectrum",timeLimit:0,question:"你听新歌时更关注——",options:[{text:"它和已有流派的关系：传承还是突破？",score:{tf:1,jp:-1}},{text:"它带给我的第一反应：喜欢还是不喜欢？",score:{tf:-1,jp:1}}]},
+      {id:142,act:4,type:"spectrum",timeLimit:0,question:"你对"无调性音乐"的看法？",options:[{text:"这是音乐语言的解放",score:{tf:2,jp:-2}},{text:"没有调性就没有美，这不算音乐",score:{tf:-1,jp:2}}]},
+      {id:143,act:4,type:"spectrum",timeLimit:0,question:"你觉得音乐评价应该——",options:[{text:"有客观标准，可分析可论证",score:{tf:2}},{text:"主观感受为主，不需要说服谁",score:{tf:-2}}]},
+      {id:144,act:4,type:"spectrum",timeLimit:0,question:"你更认同哪种创作观？",options:[{text:"灵感来自刻苦训练和深厚积累",score:{tf:2,jp:1}},{text:"灵感来自直觉和情感冲动",score:{tf:-2,jp:-1}}]},
+      {id:145,act:4,type:"spectrum",timeLimit:0,question:"一首歌的"编曲"对你来说——",options:[{text:"非常重要，编曲决定品质",score:{tf:2}},{text:"没那么重要，感觉对了就行",score:{tf:-2}}]},
+      {id:146,act:4,type:"spectrum",timeLimit:0,question:"你对"即兴演奏"的态度？",options:[{text:"音乐最迷人的不确定性",score:{tf:-1,jp:-2}},{text:"需要深厚的功底才能即兴，本质还是技术",score:{tf:2,jp:1}}]},
+      {id:147,act:4,type:"spectrum",timeLimit:0,question:"你认为"经典"之所以成为经典——",options:[{text:"因为它的品质经受住了时间检验",score:{jp:2,tf:1}},{text:"因为恰好在那个时代被足够多的人认可",score:{jp:-2,tf:-1}}]},
+      {id:148,act:4,type:"spectrum",timeLimit:0,question:"你更认同——",options:[{text:"音乐有普遍性的美，跨越文化",score:{jp:2,tf:1}},{text:"音乐的美是文化建构的，没有绝对标准",score:{jp:-2,tf:-1}}]},
+      {id:149,act:4,type:"spectrum",timeLimit:0,question:"你听歌时更享受——",options:[{text:"共鸣：这唱的就是我",score:{tf:-2}},{text:"惊叹：居然可以这样写",score:{tf:2}}]},
+      {id:150,act:4,type:"spectrum",timeLimit:0,question:"你更欣赏——",options:[{text:"一首结构工整、技法精湛的作品",score:{tf:2,jp:1}},{text:"一首粗糙但真诚到骨子里的作品",score:{tf:-2,jp:-1}}]},
+      {id:51,act:5,type:"choice",timeLimit:0,question:"一辈子的选择——",options:[{text:"只能听一种流派，但那是我最爱的",score:{jp:2}},{text:"什么都能听，但最爱那首要放弃",score:{jp:-2}}]},
+      {id:52,act:5,type:"choice",timeLimit:0,question:"你宁愿——",options:[{text:"在万人面前唱自己的歌",score:{ei:3}},{text:"在无人的房间听最爱的歌",score:{ei:-3}}]},
+      {id:53,act:5,type:"choice",timeLimit:0,question:"你宁愿失去——",options:[{text:"听到新歌的能力",score:{jp:2}},{text:"回味老歌的能力",score:{jp:-2}}]},
+      {id:54,act:5,type:"choice",timeLimit:0,question:"如果用一首歌形容你自己——",options:[{text:"一首所有人都知道的热门歌",score:{ei:2,sn:1}},{text:"一首只有少数人懂的隐藏曲目",score:{ei:-2,sn:-1}}]},
+      {id:55,act:5,type:"choice",timeLimit:0,question:"你只能留下一个——",options:[{text:"歌词（旋律想象）",score:{sn:-1,tf:1}},{text:"旋律（歌词忘掉）",score:{sn:1,tf:-1}}]},
+      {id:56,act:5,type:"choice",timeLimit:0,question:"你更不能忍受——",options:[{text:"一首歌旋律好但歌词蠢",score:{tf:2}},{text:"一首歌词好但旋律难听",score:{tf:-2}}]},
+      {id:57,act:5,type:"choice",timeLimit:0,question:"你会因为什么取关一个音乐博主？",options:[{text:"他推荐的东西太大众了",score:{jp:-2,sn:-1}},{text:"他推荐的东西太冷门了，装什么装",score:{jp:2,sn:1}}]},
+      {id:58,act:5,type:"choice",timeLimit:0,question:"你最想拥有哪种超能力？",options:[{text:"绝对音感——听一遍就能完美复现",score:{tf:2,jp:1}},{text:"共情共振——听任何歌都能感受创作者的心",score:{tf:-2,jp:-1}}]},
+      {id:59,act:5,type:"choice",timeLimit:0,question:"你的终极音乐梦想——",options:[{text:"创作一首被千万人传唱的歌",score:{ei:3,jp:1}},{text:"创作一首只有十个人听懂但改变了他们一生的歌",score:{ei:-3,jp:-1}}]},
+      {id:60,act:5,type:"choice",timeLimit:0,question:"最后：你做这个测试的时候——",options:[{text:"觉得挺好玩，想分享给朋友",score:{ei:2,tf:-1}},{text:"认真思考每个选项，觉得还挺准",score:{tf:1,jp:1}}]},
+      {id:151,act:5,type:"choice",timeLimit:0,question:"你只能拥有一种音乐体验——",options:[{text:"在全世界最大的音乐节压轴演出",score:{ei:3,jp:1}},{text:"在一个只有你知道的地下室发现最完美的声音",score:{ei:-3,jp:-1}}]},
+      {id:152,act:5,type:"choice",timeLimit:0,question:"你宁愿——",options:[{text:"写出一段被所有人传唱的旋律",score:{ei:2,sn:2}},{text:"创造出一种前所未有的声音",score:{tf:2,jp:-2}}]},
+      {id:153,act:5,type:"choice",timeLimit:0,question:"你必须选一个——",options:[{text:"永远只能听已经存在的歌",score:{jp:2}},{text:"永远只能听还没被创作出来的歌",score:{jp:-2}}]},
+      {id:154,act:5,type:"choice",timeLimit:0,question:"你更在意——",options:[{text:"一首歌被多少人喜欢",score:{ei:1,sn:1}},{text:"一首歌被什么样的人喜欢",score:{ei:-1,tf:1}}]},
+      {id:155,act:5,type:"choice",timeLimit:0,question:"你只能和一个音乐人喝咖啡——",options:[{text:"莫扎特，聊聊结构和技法",score:{tf:2,jp:1}},{text:"科特·柯本，聊聊痛苦和真实",score:{tf:-2,jp:-1}}]},
+      {id:156,act:5,type:"choice",timeLimit:0,question:"你更害怕——",options:[{text:"自己的品味被时代淘汰",score:{jp:-2}},{text:"自己的品味被大众同化",score:{jp:2,sn:-1}}]}
+    ];
+
+    // ========== 16种人格数据 ==========
+    const personalities = {
+      "ESTJ":{code:"ESTJ",title:"KTV霸主",emoji:"🎤",tagline:"你唱歌从不等人邀请，因为整个包房都是你的舞台",roast:"你的歌单就是华语乐坛年度销量榜的复制粘贴，但你不觉得丢人——因为“会唱”在你这里就是最高的审美标准。每次KTV你第一个抢麦，别人唱到一半你突然跟唱加入，还比人家大声。朋友聚会你最怕的不是丢脸，是点歌台被别人抢走。《死了都要爱》被你唱出了“死了都要麦”的气势，而底下的人确实死了——被你震死的。你人生最大的困惑是：为什么有人去KTV不唱歌？",soulScene:"在KTV把《死了都要爱》飙完，发现所有人都低头看手机了，你安慰自己：“他们一定是在录音。”",artists:["凤凰传奇","Adele","黑豹乐队"],keywords:["洗脑旋律","全民传唱","舞台中心"],color:"#FF6B35",bgColor:"#FFF5F0",musician:{name:"林俊杰",avatar:"🎹",quote:"每一首歌都要唱到所有人都会跟唱"}},
+      "ISTJ":{code:"ISTJ",title:"活体点唱机",emoji:"📻",tagline:"你的歌单按发行年份排序，且不接受反驳",roast:"你对“新歌”的定义是三年以内的，对“经典”的定义是所有比你还老的歌。你可能是世界上唯一还记得2003年Billboard榜单完整顺序的活人，这件事你既不骄傲也不害羞，只是觉得这是基本素养。你的播放列表只有两个：“好听”和“更好听”，从来不改名，因为“好听就是好听，不需要标签”。别人随机播放，你按序播放。别人发现新歌，你重新发现老歌。你不是念旧，你是音乐界的考古学家。",soulScene:"朋友说“来首新歌听听”，你放了首2019年的，并补充：“这首还很新。”",artists:["Beatles","邓丽君","Queen"],keywords:["经典永流传","有序播放","不可随机"],color:"#4A90D9",bgColor:"#F0F5FF",musician:{name:"邓丽君",avatar:"🌸",quote:"经典不因时间褪色，反而更醇厚"}},
+      "ESTP":{code:"ESTP",title:"蹦迪永动机",emoji:"🎺",tagline:"你的心率跟着BPM走，低于120算慢歌",roast:"你的Spotify年度报告就一个字——LOUD。你不理解为什么有人会在家安安静静听歌，音乐不就是用来蹦的吗？你去演唱会不为了听歌，是为了让贝斯震穿你的胸腔。你的生活BGM永远是drop来临前那8小节的build-up，而你就是那个永远在等drop的人。朋友结婚你放EDM，亲人生日你放电音，葬礼你都想放个dubstep——“走也要走得有节奏”。你的邻居已经搬走了三个，但你觉得自己是个好邻居，至少你11点前会关窗。",soulScene:"凌晨3点在朋友圈发“有人出来吗”，配一首EDM。3:05删掉。3:10又发。3:15又删。3:20真的有人出来了。",artists:["Skrillex","王嘉尔","Daft Punk"],keywords:["BPM爆表","现场之王","音浪太强"],color:"#FF2D55",bgColor:"#FFF0F3",musician:{name:"王嘉尔",avatar:"🔥",quote:"音乐不蹦，听它干嘛？"}},
+      "ISTP":{code:"ISTP",title:"低频潜水员",emoji:"🎧",tagline:"你听的不是歌，是那个40Hz的sub bass",roast:"别人听旋律，你听频段。朋友问你“这首歌怎么样”，你说“低频下潜还行但中频有点糊”，然后朋友的表情就像你刚说了段外星语。你的耳机比你的车贵，你的线材比你的衣服贵，你的声卡比你的显卡贵。你声称能听出320kbps和FLAC的区别，其实有一半时间是猜的，但你绝不承认。你觉得有歌词的歌都是噪音——因为人声频段把整个声场搞乱了。你的梦想是在一个完全隔音的房间里听一首完全无损的歌，然后你发现你买不起那个房间。",soulScene:"花2小时调EQ，最后还是切回默认设置，但你不告诉任何人。",artists:["Burial","Massive Attack","坂本龙一"],keywords:["低频下潜","声场宽广","无损信仰"],color:"#5AC8FA",bgColor:"#F0FAFF",musician:{name:"坂本龙一",avatar:"🌊",quote:"沉默也是音乐的一部分"}},
+      "ESFJ":{code:"ESFJ",title:"中华小曲库",emoji:"🎻",tagline:"你的歌单是所有人歌单的并集",roast:"你的音乐品味像自助餐厅——什么都有，什么都不精。“我喜欢”列表3000首歌横跨12种语言，因为你听歌的标准是“这首歌我认识”。你认识周杰伦也认识巴赫，能哼《双截棍》也能哼《G弦上的咏叹调》，但让你详细聊聊哪个流派，你就像被老师点名回答问题的小学生。不过说实话，聚会放你的歌单永远不出错——这才是你真正的超能力。你不是什么都听，你是什么场合都能放对歌。这年头，实用主义也是一种品味。",soulScene:"在任何场合都能精准放出一首所有人都会跟唱的歌，然后假装“随便放的”。",artists:["周杰伦","五月天","Coldplay"],keywords:["万金油","聚会之魂","认识就算喜欢"],color:"#FFCC00",bgColor:"#FFFBF0",musician:{name:"周杰伦",avatar:"🎤",quote:"只要我开口，在座没有陌生人"}},
+      "ISFJ":{code:"ISFJ",title:"时光录音机",emoji:"🎼",tagline:"你的歌单是一台时光机，只是永远往回开",roast:"你的“最近播放”和“十年前播放”是同一份列表，你觉得这不是bug是feature。你觉得音乐有黄金年代，而你恰好活在它的回忆里。你会为一段已经消失的旋律找三天三夜，翻遍整个互联网，找到后循环播放到再也不想听——然后三年后又突然想听，再找三天三夜。你不是不敢听新歌，你只是觉得新歌还没经过时间检验，不配进你的播放列表。你的年度听歌报告每年都一样，Spotify都懒得给你生成新词云了。",soulScene:"深夜翻到一首初中时循环的歌，然后在被窝里红了眼眶，第二天假装什么都没发生。",artists:["陈奕迅","Radiohead","Carpenters"],keywords:["回忆杀","黄金年代","循环到腻"],color:"#AF52DE",bgColor:"#F8F0FF",musician:{name:"陈奕迅",avatar:"💫",quote:"十年之后，还是那首歌最懂你"}},
+      "ESFP":{code:"ESFP",title:"万人迷DJ",emoji:"🎷",tagline:"你放的歌永远对，因为你在放之前已经读了全场的情绪",roast:"你不是在听歌，你是在用歌社交。你的歌单不是给自己听的，是给所有你认识的人准备的。和文艺青年聊爵士，和运动狂聊rap，和妈妈聊邓丽君，和老板聊古典——无缝衔接，每个圈子都觉得你“品味跟我好像”。你没自己特别喜欢的风格，因为你的品味是液态的，会随容器变形。但别小看这本事——能同时让所有人觉得“这人懂我”，本身就是一种天赋。你不是没有自我，你的自我就是“让别人开心”。",soulScene:"聚会时默默切到一首冷门歌，全场“这歌好听！谁放的？”你微微一笑，深藏功与名。",artists:["Bruno Mars","林宥嘉","Daft Punk"],keywords:["读心术","气氛大师","无缝切换"],color:"#FF9500",bgColor:"#FFF8F0",musician:{name:"Bruno Mars",avatar:"🌟",quote:"让每个人都动起来，就是我的天赋"}},
+      "ISFP":{code:"ISFP",title:"午夜电台",emoji:"🌙",tagline:"你的歌单名字叫“深夜勿听”，但你每晚都听",roast:"你听歌的仪式感比宗教还强——关灯、戴耳机、调音量、闭眼，然后被自己的情绪溺死。你的歌全是“只有深夜才能听”的那种，白天放出来显得矫情，但晚上就是刀刀致命。你的年度关键词永远是“emo”，你的搜索记录全是“让人安静哭泣的歌”。你不是真的悲伤，你只是享受那种被旋律击穿的脆弱感——就像别人享受过山车，你享受情绪的自由落体。白天你是正常人，晚上你是另一个人。你的双重生活，只有耳机知道。",soulScene:"凌晨2点把一首歌循环了47遍，然后发了一条秒删的朋友圈，配文只有三个点“...”",artists:["Lana Del Rey","朴树","Billie Eilish"],keywords:["深夜专供","emo体质","仪式感拉满"],color:"#30B0C7",bgColor:"#F0FBFF",musician:{name:"Billie Eilish",avatar:"🦋",quote:"真正的歌只在凌晨才肯开口"}},
+      "ENTJ":{code:"ENTJ",title:"音乐指挥官",emoji:"🦅",tagline:"你的歌单有主题、有逻辑、有叙事弧线，且不允许乱序",roast:"你听歌像做项目管理——有目标、有路径、有复盘。你的歌单不是随便加的，每一首都经过“是否契合主题”“是否破坏叙事节奏”“是否与前后曲风冲突”三重评审。你鄙视随机播放，因为“音乐需要结构，就像人生需要规划”。你给别人推荐专辑时会说“从第一首按顺序听到最后一首”，如果对方说“我就挑了其中几首听”，你在心里已经把他拉黑了。你的歌单描述比你的简历还专业。",soulScene:"给朋友推荐专辑时说“你要从第一首按顺序听到最后一首”，对方说“我就随便点了几首”，你当场绝交。",artists:["汉斯·季默","李宗盛","Pink Floyd"],keywords:["叙事弧线","体系化审美","禁止随机"],color:"#FF3B30",bgColor:"#FFF5F5",musician:{name:"汉斯·季默",avatar:"🎬",quote:"每一个音符都在为叙事服务"}},
+      "INTJ":{code:"INTJ",title:"声音建筑师",emoji:"🏗️",tagline:"你听的不是音乐，是声学工程",roast:"你是那种会研究一首歌用了什么混响算法、什么压缩器、什么采样率的人。你对“好听”没兴趣，你要的是“精妙”。极简主义是你的宗教，一段Philip Glass的相位实验能让你兴奋到失眠。你觉得大部分流行歌就像快餐——热量够但没营养，吃多了还腻。你的理想音乐是一段可以被数学公式描述的波形，因为只有确定性的东西才值得欣赏。你人生最大的矛盾是：你想让别人理解你的品味，但你又觉得他们理解不了。",soulScene:"在音乐节上闭眼分析了30分钟的声场分布，睁开眼发现周围全是蹦迪的人，你觉得他们好可怜。",artists:["Philip Glass","Aphex Twin","细井聪司"],keywords:["极简主义","声学精密","品味鄙视链顶端"],color:"#5856D6",bgColor:"#F0EAFF",musician:{name:"坂本龙一",avatar:"📐",quote:"音乐是时间的建筑学"}},
+      "ENTP":{code:"ENTP",title:"风格缝合怪",emoji:"🧬",tagline:"你的歌单像一个联合国开会，且每次投票结果都不同",roast:"你最喜欢的游戏是在两个风马牛不相及的流派之间找共同点——而且你真的能找到。你的歌单从蒙古呼麦切到法国电子再切到粤语老歌，你觉得这很正常，别人觉得你在发疯。你是那种会在音乐节上同时跟金属党和民谣党聊得火热的人，两边都以为你是自己人。你的音乐观点永远在变，去年的“终极最爱”今年已经被你“审美迭代”掉了。你不是善变，你是在做音乐品味的田野调查。",soulScene:"朋友翻你歌单：“蒙古长调→法国House→陈奕迅？？”你说：“你不觉得它们都在处理空间感吗？”对方沉默了。你把这当作认同。",artists:["Björk","方大同","Gorillaz"],keywords:["跨界缝合","品味叛逆","逻辑自洽型胡来"],color:"#FF2D55",bgColor:"#FFF0F3",musician:{name:"Björk",avatar:"🧬",quote:"风格是牢笼，我选择越狱"}},
+      "INTP":{code:"INTP",title:"频谱分析师",emoji:"📊",tagline:"你判断一首歌好不好听，先打开频谱仪看一眼",roast:"你是真正意义上的“音乐理性派”。别人说“这首歌好有感觉”，你说“它的动态范围压缩过度了”。别人被歌词感动，你在分析押韵的数学结构。你的理想音乐是一段能被公式描述的波形，最好还是分形的。你去听Live House不带荧光棒，带分贝仪。你写过一篇3000字的文章论证“为什么《月光奏鸣曲》第一乐章的节奏符合黄金分割”，没有人看，但你觉得这是人类文明的损失。",soulScene:"在Live House里默默打开手机测分贝，发现主唱声音被吉他盖住了。你很焦虑，但不是因为音乐，是因为混音不对。",artists:["Autechre","窦唯","Brian Eno"],keywords:["频谱优先","动态范围","可量化审美"],color:"#007AFF",bgColor:"#F0F5FF",musician:{name:"窦唯",avatar:"🔬",quote:"声音本身就是答案，不需要歌词做翻译"}},
+      "ENFJ":{code:"ENFJ",title:"情感扩音器",emoji:"💌",tagline:"你听歌不是为自己，是为了找到那首能替你说出心里话的歌",roast:"你的歌单是一本公开的日记——但比你的真日记诚实一百倍。你每次分享歌曲都像在说“听这首就懂我了”，然而对方通常只回了个“👍”。你是朋友圈的“歌曲翻译官”，别人说不出口的话，你用一首歌替他讲。你会在分手后给前任发一首歌而不是一段话，因为“歌词比我说得好”。你收藏的歌按情感分类：“想念”“释然”“假装不在意”“真的不在意了”。最后一个列表是空的。",soulScene:"给暗恋的人分享了一首歌，对方回了个“👍”。你用了三首歌的时间来消化这个回复。",artists:["Taylor Swift","李荣浩","Ed Sheeran"],keywords:["歌曲翻译官","情感代嘴","分享即表达"],color:"#FF6B8A",bgColor:"#FFF5F8",musician:{name:"Taylor Swift",avatar:"💌",quote:"我写的不只是歌词，是所有人的心情日记"}},
+      "INFJ":{code:"INFJ",title:"通灵收音机",emoji:"🔮",tagline:"你总能听到一首歌里作曲者没打算让你听到的东西",roast:"你是那种会为一首歌写3000字乐评的人——其中2800字在分析作曲者的心理状态，剩下200字在分析自己的心理状态。你的音乐直觉准到诡异，第一次听就能预判副歌走向，但你从不炫耀，因为“说破了就不灵了”。你听歌时会有一种“这首歌唱的就是我”的错觉，而且每次都是不同的歌，这让你怀疑自己到底有多少个人格。你收藏了一堆“全世界只有我懂”的歌，其实全世界有十万人都收藏了，只是你们从来不交流。",soulScene:"听了一首新歌，沉默很久，说“写这首歌的人一定经历了很多”。其实你只是从和弦进行推断的，但说出来就变成了读心术。",artists:["Sigur Rós","万能青年旅店","Sufjan Stevens"],keywords:["灵魂频段","读心式听歌","沉默的乐评人"],color:"#BF5AF2",bgColor:"#F8F0FF",musician:{name:"万能青年旅店",avatar:"🔮",quote:"杀死那个石家庄人，杀死的是所有人的影子"}},
+      "ENFP":{code:"ENFP",title:"风格流浪者",emoji:"🌈",tagline:"你这周的最爱和上周的最爱，来自两个不同的星球",roast:"你的音乐人格是液态的——每天都在流动，每周都在重塑。周一你还沉浸在蓝调里感叹人生，周五你已经在K-pop的应援声里蹦跶了。你对每一首歌的热爱都是真诚的——只是保质期不太长。向朋友极力推荐一支乐队时的你，和两周后“那乐队后来怎样了”的你，是两个完全不同的人。你的“年度最爱”每年都不一样，你的“一生最爱”每月都不一样。你不是善变，你是音乐的博爱主义者——见一个爱一个，每一个都是真心。",soulScene:"向朋友极力推荐一支乐队，两周后被问“那乐队后来怎样了”——你已经换新欢了，但你假装还记得。",artists:["David Bowie","窦靖童","St. Vincent"],keywords:["液态品味","热情烟花","每周重塑"],color:"#FF9F0A",bgColor:"#FFF8F0",musician:{name:"David Bowie",avatar:"🌈",quote:"我永远在变成下一个人"}},
+      "INFP":{code:"INFP",title:"吟游诗人",emoji:"🌙",tagline:"你不是在听歌，你是在和另一个时空的自己对话",roast:"你的歌单是你的秘密花园——严禁外人进入，除非他通过了你设立的7道音乐品味审核。你对音乐的忠诚度比对人类高，一首歌一旦进入你的“灵魂歌单”，就是一辈子的事。有人问你“你最喜欢什么音乐”，你说了20分钟也没给出答案，因为“这很难简单概括，要看是哪个时期的我”。你的歌单按“心境”分类而不是“流派”，类别包括但不限于：“雨天散步”“日落发呆”“与世界和解”“与世界绝交”。最后一个类别歌最多。",soulScene:"有人问你“你最喜欢什么音乐”，你沉默了30秒，然后说“你确定要聊这个吗？”——接下来的一小时，对方后悔了。",artists:["Nick Drake","程璧","Bon Iver"],keywords:["秘密花园","灵魂契约","音乐续命"],color:"#64D2FF",bgColor:"#F0FAFF",musician:{name:"Nick Drake",avatar:"🌙",quote:"最安静的歌声里，藏着最深的回响"}}
+    };
+
+    // ========== 幕次信息 ==========
+    const actInfos = {
+      1:{act:1,icon:"⚡",title:"直觉",desc:"直觉直觉，秒选不后悔",color:"#FF9500"},
+      2:{act:2,icon:"📚",title:"知识",desc:"识货验证，真假乐迷一测便知",color:"#5856D6"},
+      3:{act:3,icon:"💡",title:"品味",desc:"你的品味里，藏着你的灵魂",color:"#FF2D55"},
+      4:{act:4,icon:"🌈",title:"光谱",desc:"从极简到极繁，你在哪一端",color:"#30B0C7"},
+      5:{act:5,icon:"🔥",title:"抉择",desc:"最后的选择，暴露真正的你",color:"#FF6B35"}
+    };
+
+    // ========== 测试状态 ==========
+    let questions = [];
+    let currentIndex = 0;
+    let scores = {E:0,I:0,S:0,N:0,T:0,F:0,J:0,P:0};
+    let knowledgeScore = 0;
+    let knowledgeTotal = 0;
+    let timer = null;
+    let timeLeft = 8;
+    let selectedOption = null;
+    let showResult = false;
+    let radarChart = null;
+
+    // ========== 随机抽取题目 ==========
+    function pickQuestions() {
+      const actCounts = [6, 6, 8, 5, 5];
+      const picked = [];
+      for (let act = 1; act <= 5; act++) {
+        const pool = allQuestions.filter(q => q.act === act);
+        const shuffled = pool.sort(() => Math.random() - 0.5);
+        picked.push(...shuffled.slice(0, actCounts[act - 1]));
+      }
+      return picked.sort((a, b) => a.act - b.act || a.id - b.id);
+    }
+
+    // ========== 初始化预览 ==========
+    function initPreview() {
+      const previewList = Object.values(personalities).slice(0, 8);
+      const grid = document.getElementById('preview-grid');
+      grid.innerHTML = previewList.map(p => `
+        <div class="preview-item">
+          <span class="preview-emoji">${p.emoji}</span>
+          <span class="preview-title">${p.title}</span>
+        </div>
+      `).join('');
+    }
+
+    // ========== 开始测试 ==========
+    function startTest() {
+      questions = pickQuestions();
+      currentIndex = 0;
+      scores = {E:0,I:0,S:0,N:0,T:0,F:0,J:0,P:0};
+      knowledgeScore = 0;
+      knowledgeTotal = 0;
+      showPage('test');
+      showQuestion();
+    }
+
+    // ========== 页面切换 ==========
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+    }
+
+    // ========== 显示题目 ==========
+    function showQuestion() {
+      if (currentIndex >= questions.length) {
+        showResultPage();
+        return;
+      }
+      const q = questions[currentIndex];
+      const actInfo = actInfos[q.act];
+
+      // 更新进度条
+      const progress = ((currentIndex) / questions.length) * 100;
+      document.getElementById('progress-fill').style.width = progress + '%';
+      document.getElementById('progress-fill').style.background = actInfo.color;
+
+      // 更新顶部栏
+      document.getElementById('act-icon').textContent = actInfo.icon;
+      document.getElementById('act-title').textContent = `第${actInfo.act}幕 · ${actInfo.title}`;
+      document.getElementById('q-counter').textContent = `${currentIndex + 1} / ${questions.length}`;
+
+      // 更新题目
+      document.getElementById('question-text').textContent = q.question;
+
+      // 更新选项
+      const labels = ['A', 'B', 'C', 'D'];
+      const optionsHtml = q.options.map((opt, idx) => `
+        <div class="option-card" data-index="${idx}" onclick="selectOption(${idx})">
+          <div class="option-left">
+            <span class="option-label">${labels[idx]}</span>
+            <span class="option-text">${opt.text}</span>
+          </div>
+          <span class="option-badge" style="display:none;"></span>
+        </div>
+      `).join('');
+      document.getElementById('options-area').innerHTML = optionsHtml;
+
+      // 知识题特殊处理
+      if (q.type === 'knowledge') {
+        knowledgeTotal++;
+      }
+
+      // 倒计时（仅Act 1）
+      const countdownArea = document.getElementById('countdown-area');
+      const knowledgeHint = document.getElementById('knowledge-hint');
+      knowledgeHint.style.display = 'none';
+
+      if (q.timeLimit > 0) {
+        countdownArea.style.display = 'flex';
+        timeLeft = q.timeLimit;
+        document.getElementById('countdown-num').textContent = timeLeft;
+        document.getElementById('countdown-ring').style.borderColor = actInfo.color;
+        document.getElementById('countdown-num').style.color = actInfo.color;
+        startCountdown();
+      } else {
+        countdownArea.style.display = 'none';
+        clearInterval(timer);
+      }
+
+      selectedOption = null;
+      showResult = false;
+    }
+
+    // ========== 倒计时 ==========
+    function startCountdown() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        const q = questions[currentIndex];
+        const actInfo = actInfos[q.act];
+        document.getElementById('countdown-num').textContent = timeLeft;
+
+        if (timeLeft <= 3) {
+          document.getElementById('countdown-ring').style.borderColor = '#FF2D55';
+          document.getElementById('countdown-num').style.color = '#FF2D55';
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          autoSelect();
+        }
+      }, 1000);
+    }
+
+    // ========== 超时自动选择 ==========
+    function autoSelect() {
+      if (!selectedOption) {
+        // 随机选择一个选项
+        const q = questions[currentIndex];
+        const randomIdx = Math.floor(Math.random() * q.options.length);
+        selectOption(randomIdx);
+      }
+    }
+
+    // ========== 选择选项 ==========
+    function selectOption(idx) {
+      if (showResult) return;
+      clearInterval(timer);
+      showResult = true;
+      selectedOption = idx;
+
+      const q = questions[currentIndex];
+      const opt = q.options[idx];
+      const actInfo = actInfos[q.act];
+
+      // 更新分数
+      if (opt.score) {
+        if (opt.score.ei) scores[opt.score.ei > 0 ? 'E' : 'I'] += Math.abs(opt.score.ei);
+        if (opt.score.sn) scores[opt.score.sn > 0 ? 'S' : 'N'] += Math.abs(opt.score.sn);
+        if (opt.score.tf) scores[opt.score.tf > 0 ? 'T' : 'F'] += Math.abs(opt.score.tf);
+        if (opt.score.jp) scores[opt.score.jp > 0 ? 'J' : 'P'] += Math.abs(opt.score.jp);
+      }
+
+      // 知识题反馈
+      if (q.type === 'knowledge') {
+        const options = document.querySelectorAll('.option-card');
+        options.forEach((el, i) => {
+          if (q.options[i].correct) {
+            el.classList.add('correct');
+            el.querySelector('.option-badge').style.display = 'inline';
+            el.querySelector('.option-badge').textContent = '✅';
+          }
+          if (i === idx && !q.options[i].correct) {
+            el.classList.add('wrong');
+            el.querySelector('.option-badge').style.display = 'inline';
+            el.querySelector('.option-badge').textContent = '❌';
+          }
+          if (i === idx) {
+            el.classList.add('selected');
+          }
+        });
+
+        const knowledgeHint = document.getElementById('knowledge-hint');
+        knowledgeHint.style.display = 'block';
+        if (q.options[idx].correct) {
+          knowledgeScore++;
+          knowledgeHint.className = 'knowledge-hint hint-correct';
+          knowledgeHint.textContent = '🎯 内行人！';
+        } else {
+          knowledgeHint.className = 'knowledge-hint hint-wrong';
+          knowledgeHint.textContent = '🤔 没关系，品味和知识是两回事';
+        }
+      } else {
+        // 非知识题，显示选中状态
+        const options = document.querySelectorAll('.option-card');
+        options[idx].classList.add('selected');
+      }
+
+      // 延迟进入下一题
+      const delay = q.type === 'knowledge' ? 1500 : 600;
+      setTimeout(() => {
+        currentIndex++;
+        checkTransition();
+      }, delay);
+    }
+
+    // ========== 检查幕次过渡 ==========
+    function checkTransition() {
+      if (currentIndex >= questions.length) {
+        showResultPage();
+        return;
+      }
+      const currentAct = questions[currentIndex - 1]?.act || 1;
+      const nextAct = questions[currentIndex].act;
+
+      if (nextAct !== currentAct && currentIndex > 0) {
+        showTransition(nextAct);
+      } else {
+        showQuestion();
+      }
+    }
+
+    // ========== 显示幕次过渡 ==========
+    function showTransition(act) {
+      const info = actInfos[act];
+      document.getElementById('tr-icon').textContent = info.icon;
+      document.getElementById('tr-act').textContent = `第${info.act}幕`;
+      document.getElementById('tr-title').textContent = info.title;
+      document.getElementById('tr-desc').textContent = info.desc;
+      document.getElementById('transition-overlay').classList.add('show');
+
+      setTimeout(() => {
+        document.getElementById('transition-overlay').classList.remove('show');
+        showQuestion();
+      }, 2000);
+    }
+
+    // ========== 显示结果页 ==========
+    function showResultPage() {
+      // 计算人格类型
+      const ei = scores.E >= scores.I ? 'E' : 'I';
+      const sn = scores.S >= scores.N ? 'S' : 'N';
+      const tf = scores.T >= scores.F ? 'T' : 'F';
+      const jp = scores.J >= scores.P ? 'J' : 'P';
+      const code = ei + sn + tf + jp;
+
+      const p = personalities[code] || personalities['INFP'];
+
+      // 更新结果页
+      document.getElementById('p-emoji').textContent = p.emoji;
+      document.getElementById('p-title').textContent = p.title;
+      document.getElementById('p-title').style.color = p.color;
+      document.getElementById('p-code').textContent = p.code;
+      document.getElementById('tagline-text').textContent = p.tagline;
+      document.getElementById('result-glow').style.background =
+        `radial-gradient(circle at 50% 20%,${p.color}15,transparent 60%)`;
+
+      // 音乐灵魂
+      document.getElementById('musician-avatar').textContent = p.musician.avatar;
+      document.getElementById('musician-name').textContent = p.musician.name;
+      document.getElementById('musician-name').style.color = p.color;
+      document.getElementById('musician-quote').textContent = p.musician.quote;
+      document.getElementById('musician-card').style.borderColor = p.color + '20';
+
+      // 计算百分比
+      const toPct = (pos, neg) => {
+        const total = pos + neg;
+        if (total === 0) return 50;
+        return Math.round(50 + (pos / total) * 50);
+      };
+      const pct = {
+        ei: toPct(scores.E, scores.I),
+        sn: toPct(scores.S, scores.N),
+        tf: toPct(scores.T, scores.F),
+        jp: toPct(scores.J, scores.P)
+      };
+
+      // 更新百分比显示
+      document.getElementById('pct-ei').textContent = pct.ei + '%';
+      document.getElementById('pct-sn').textContent = pct.sn + '%';
+      document.getElementById('pct-tf').textContent = pct.tf + '%';
+      document.getElementById('pct-jp').textContent = pct.jp + '%';
+      document.getElementById('label-ei').textContent = pct.ei >= 50 ? '外放 E' : '内敛 I';
+      document.getElementById('label-sn').textContent = pct.sn >= 50 ? '旋律 S' : '氛围 N';
+      document.getElementById('label-tf').textContent = pct.tf >= 50 ? '结构 T' : '情感 F';
+      document.getElementById('label-jp').textContent = pct.jp >= 50 ? '经典 J' : '实验 P';
+
+      // 绘制雷达图
+      drawRadarChart(pct, p.color);
+
+      // 品味心理学
+      const dims = p.analysis.dims;
+      document.getElementById('dim-list').innerHTML = dims.map((d, i) => {
+        const colors = ['#FF9500', '#FF2D55', '#5856D6', '#30B0C7'];
+        const pctVal = parseInt(d.pct);
+        return `
+          <div class="dim-item">
+            <div class="dim-header">
+              <span class="dim-label">${d.axis}</span>
+              <span class="dim-pct" style="color:${colors[i]}">${d.pct}</span>
+            </div>
+            <div class="dim-bar"><div class="dim-fill" style="width:${pctVal}%;background:${colors[i]}"></div></div>
+            <span class="dim-desc">${d.desc}</span>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('analysis-summary').textContent = p.analysis.summary;
+      document.getElementById('analysis-refs').innerHTML = `
+        <span class="ref-label">📚 参考文献</span>
+        ${p.analysis.refs.map(r => `<span class="ref-item">${r}</span>`).join('')}
+      `;
+
+      // 毒舌点评
+      document.getElementById('roast-text').textContent = p.roast;
+
+      // 灵魂场景
+      document.getElementById('soul-text').textContent = p.soulScene;
+
+      // 代表音乐人
+      document.getElementById('artist-list').innerHTML = p.artists.map(a =>
+        `<span class="tag artist-tag">${a}</span>`
+      ).join('');
+
+      // 关键词
+      document.getElementById('keyword-list').innerHTML = p.keywords.map(k =>
+        `<span class="tag keyword-tag" style="background:${p.color}15;color:${p.color}">${k}</span>`
+      ).join('');
+
+      // 知识段位
+      const kLevel = getKnowledgeLevel(knowledgeScore, knowledgeTotal);
+      document.getElementById('kl-emoji').textContent = kLevel.emoji;
+      document.getElementById('kl-level').textContent = kLevel.level;
+      document.getElementById('kl-desc').textContent = kLevel.desc;
+
+      showPage('result');
+    }
+
+    // ========== 绘制雷达图 ==========
+    function drawRadarChart(pct, color) {
+      const ctx = document.getElementById('radar-canvas').getContext('2d');
+
+      if (radarChart) {
+        radarChart.destroy();
+      }
+
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['外放 E', '旋律 S', '结构 T', '经典 J'],
+          datasets: [{
+            data: [pct.ei, pct.sn, pct.tf, pct.jp],
+            backgroundColor: color + '30',
+            borderColor: color,
+            borderWidth: 2,
+            pointBackgroundColor: color,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1
+          }]
+        },
+        options: {
+          responsive: false,
+          maintainAspectRatio: true,
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { display: false },
+              grid: { color: '#eee' },
+              pointLabels: {
+                font: { size: 11 },
+                color: '#888'
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    // ========== 知识段位计算 ==========
+    function getKnowledgeLevel(score, total) {
+      const pct = total > 0 ? score / total : 0;
+      if (pct >= 0.8) return {emoji:'🏆', level:'百科全书', desc:'你的音乐知识储备令人惊叹'};
+      if (pct >= 0.6) return {emoji:'🎯', level:'内行人', desc:'你的音乐知识储备不错'};
+      if (pct >= 0.4) return {emoji:'👂', level:'乐迷', desc:'你对音乐知识有基础了解'};
+      return {emoji:'🌱', level:'萌新', desc:'音乐知识还有很大提升空间'};
+    }
+
+    // ========== 重新测试 ==========
+    function restartTest() {
+      startTest();
+    }
+
+    // ========== 分享结果 ==========
+    function shareResult() {
+      if (navigator.share) {
+        navigator.share({
+          title: '音乐人格测试',
+          text: '我测出了我的音乐人格！你也来试试？',
+          url: window.location.href
+        });
+      } else {
+        // 复制链接
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+          alert('链接已复制！');
+        });
+      }
+    }
+
+    // ========== 初始化 ==========
+    initPreview();
+  </script>
+</body>
+</html>
